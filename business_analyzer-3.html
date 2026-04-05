@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Data Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .analyze-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .export-btn {
+            background: #10b981;
+            color: white;
+        }
+
+        .export-btn:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        .export-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .clear-btn {
+            background: #ef4444;
+            color: white;
+        }
+
+        .clear-btn:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results-section {
+            margin-top: 30px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-card .number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 14px;
+        }
+
+        tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .status.verified {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status.not-found {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status.checking {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .business-type {
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Business Data Analyzer</h1>
+            <p>Extract business details and verify website availability with AI</p>
+        </div>
+
+        <div class="content">
+            <div class="input-section">
+                <label for="businessData">Paste Business Data from Google:</label>
+                <textarea 
+                    id="businessData" 
+                    placeholder="Example:
+ABC Restaurant
+Italian Cuisine Restaurant
+123 Main Street, Chennai
+Contact: +91 98765 43210
+
+XYZ Bakery
+Bakery & Cafe
+456 Park Avenue, Mumbai
+Phone: 9876543211"
+                ></textarea>
+                
+                <div class="button-group">
+                    <button class="analyze-btn" onclick="analyzeData()">
+                        🚀 Analyze & Verify
+                    </button>
+                    <button class="export-btn" onclick="exportToCSV()" id="exportBtn" disabled>
+                        📥 Export to CSV
+                    </button>
+                    <button class="clear-btn" onclick="clearAll()">
+                        🗑️ Clear All
+                    </button>
+                </div>
+            </div>
+
+            <div id="loadingSection" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Analyzing business data and verifying websites...</p>
+            </div>
+
+            <div id="resultsSection" class="results-section hidden">
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="number" id="totalCount">0</div>
+                        <div class="label">Total Businesses</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number" id="websiteCount">0</div>
+                        <div class="label">With Website</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number" id="noWebsiteCount">0</div>
+                        <div class="label">No Website</div>
+                    </div>
+                </div>
+
+                <table id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Business Name</th>
+                            <th>Type</th>
+                            <th>Mobile</th>
+                            <th>Address</th>
+                            <th>Website Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let analyzedData = [];
+
+        async function analyzeData() {
+            const input = document.getElementById('businessData').value.trim();
+            
+            if (!input) {
+                alert('Please paste some business data first!');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('loadingSection').classList.remove('hidden');
+            document.getElementById('resultsSection').classList.add('hidden');
+            document.querySelector('.analyze-btn').disabled = true;
+            document.getElementById('exportBtn').disabled = true;
+
+            try {
+                // Call Claude API to extract business information
+                const extractionResponse = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        model: 'claude-sonnet-4-20250514',
+                        max_tokens: 1000,
+                        messages: [{
+                            role: 'user',
+                            content: `Extract business information from this text and return ONLY a JSON array with no other text or markdown:
+
+${input}
+
+Return format:
+[
+  {
+    "name": "business name",
+    "type": "business type/category",
+    "mobile": "phone number",
+    "address": "full address"
+  }
+]
+
+Rules:
+- Extract ALL businesses mentioned
+- For mobile: extract any phone numbers (clean format)
+- For type: infer from context (Restaurant, Cafe, Shop, etc.)
+- If any field is missing, use empty string ""
+- Return ONLY valid JSON array, no markdown, no explanation`
+                        }]
+                    })
+                });
+
+                const extractionData = await extractionResponse.json();
+                const extractedText = extractionData.content[0].text.trim();
+                
+                // Parse the JSON response
+                let businesses = JSON.parse(extractedText);
+                
+                // Now verify websites for each business
+                analyzedData = [];
+                const tableBody = document.getElementById('tableBody');
+                tableBody.innerHTML = '';
+
+                for (let i = 0; i < businesses.length; i++) {
+                    const business = businesses[i];
+                    
+                    // Add to table with checking status
+                    const row = tableBody.insertRow();
+                    row.innerHTML = `
+                        <td>${i + 1}</td>
+                        <td><strong>${business.name || 'N/A'}</strong></td>
+                        <td><span class="business-type">${business.type || 'Unknown'}</span></td>
+                        <td>${business.mobile || 'N/A'}</td>
+                        <td>${business.address || 'N/A'}</td>
+                        <td><span class="status checking">⏳ Checking...</span></td>
+                    `;
+
+                    // Verify website
+                    try {
+                        const verifyResponse = await fetch('https://api.anthropic.com/v1/messages', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                model: 'claude-sonnet-4-20250514',
+                                max_tokens: 1000,
+                                messages: [{
+                                    role: 'user',
+                                    content: `Search for "${business.name}" website and determine if they have an official website. Return ONLY a JSON object:
+
+{"hasWebsite": true/false, "url": "website url or empty string"}
+
+Just return the JSON, nothing else.`
+                                }],
+                                tools: [{
+                                    type: "web_search_20250305",
+                                    name: "web_search"
+                                }]
+                            })
+                        });
+
+                        const verifyData = await verifyResponse.json();
+                        
+                        // Extract text response
+                        let resultText = '';
+                        for (const item of verifyData.content) {
+                            if (item.type === 'text') {
+                                resultText += item.text;
+                            }
+                        }
+                        
+                        // Try to parse JSON from response
+                        let websiteStatus = { hasWebsite: false, url: '' };
+                        try {
+                            const jsonMatch = resultText.match(/\{[\s\S]*\}/);
+                            if (jsonMatch) {
+                                websiteStatus = JSON.parse(jsonMatch[0]);
+                            }
+                        } catch (e) {
+                            // Check for keywords in response
+                            if (resultText.toLowerCase().includes('true') || 
+                                resultText.toLowerCase().includes('website') ||
+                                resultText.match(/https?:\/\//)) {
+                                websiteStatus.hasWebsite = true;
+                            }
+                        }
+
+                        business.hasWebsite = websiteStatus.hasWebsite;
+                        business.websiteUrl = websiteStatus.url || '';
+                        
+                        // Update table row
+                        const statusCell = row.cells[5];
+                        if (business.hasWebsite) {
+                            statusCell.innerHTML = `<span class="status verified">✓ Website Found</span>`;
+                        } else {
+                            statusCell.innerHTML = `<span class="status not-found">✗ No Website</span>`;
+                        }
+                        
+                    } catch (error) {
+                        business.hasWebsite = false;
+                        business.websiteUrl = '';
+                        const statusCell = row.cells[5];
+                        statusCell.innerHTML = `<span class="status not-found">✗ Error</span>`;
+                    }
+
+                    analyzedData.push(business);
+                }
+
+                // Update statistics
+                updateStats();
+                
+                // Show results
+                document.getElementById('loadingSection').classList.add('hidden');
+                document.getElementById('resultsSection').classList.remove('hidden');
+                document.getElementById('exportBtn').disabled = false;
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error analyzing data. Please check the console for details.');
+                document.getElementById('loadingSection').classList.add('hidden');
+            } finally {
+                document.querySelector('.analyze-btn').disabled = false;
+            }
+        }
+
+        function updateStats() {
+            const total = analyzedData.length;
+            const withWebsite = analyzedData.filter(b => b.hasWebsite).length;
+            const withoutWebsite = total - withWebsite;
+
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('websiteCount').textContent = withWebsite;
+            document.getElementById('noWebsiteCount').textContent = withoutWebsite;
+        }
+
+        function exportToCSV() {
+            if (analyzedData.length === 0) {
+                alert('No data to export!');
+                return;
+            }
+
+            const headers = ['Business Name', 'Type', 'Mobile', 'Address', 'Has Website', 'Website URL'];
+            const rows = analyzedData.map(b => [
+                b.name || '',
+                b.type || '',
+                b.mobile || '',
+                b.address || '',
+                b.hasWebsite ? 'Yes (✓)' : 'No (✗)',
+                b.websiteUrl || ''
+            ]);
+
+            let csv = headers.join(',') + '\n';
+            rows.forEach(row => {
+                csv += row.map(cell => `"${cell}"`).join(',') + '\n';
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `business_analysis_${new Date().getTime()}.csv`;
+            a.click();
+        }
+
+        function clearAll() {
+            if (confirm('Clear all data and results?')) {
+                document.getElementById('businessData').value = '';
+                document.getElementById('resultsSection').classList.add('hidden');
+                document.getElementById('tableBody').innerHTML = '';
+                analyzedData = [];
+                document.getElementById('exportBtn').disabled = true;
+            }
+        }
+    </script>
+</body>
+</html>
